@@ -9,14 +9,14 @@ namespace Resolver.Core
 {
     public class ObjectBuilder
     {
-        private static Dictionary<TypeMap, Type> mapper = new Dictionary<TypeMap, Type>();
+        private static Dictionary<TypeMap, ConcreteTypeMap> mapper = new Dictionary<TypeMap, ConcreteTypeMap>();
 
-        public static T Resolve<T>(string mapName = "")
+        public static T Resolve<T>()
         {
-            var map = new TypeMapper(typeof(T), mapName);
+            var map = new TypeMap(typeof(T));
             if (mapper.ContainsKey(map))
             {
-                return (T)Activate(mapper[map]);
+                return (T)Activate(mapper[map].Type);
             }
             return default(T);
         }
@@ -26,8 +26,17 @@ namespace Resolver.Core
         }
         internal static void Register<Tp, Tc>(string name)
         {
-            var map = new TypeMap(typeof(Tp), name);
-            mapper[map] = typeof(Tc);
+            var map = new TypeMap(typeof(Tp));
+            var concreteMap = new ConcreteTypeMap(typeof(Tc), name);
+            mapper[map] = concreteMap;
+        }
+        internal static bool Contains(TypeMap map)
+        {
+            return mapper.ContainsKey(map);
+        }
+        internal static ConcreteTypeMap GetValue(TypeMap map)
+        {
+            return mapper[map];
         }
     }
     public class Register
@@ -37,25 +46,23 @@ namespace Resolver.Core
         {
             return new RegisterExpression<T>();
         }
-        public class RegisterExpression<Tp>
+        
+    }
+    public class RegisterExpression<Tp>
+    {
+        public void Use<Tc>(string name = "") where Tc : Tp
         {
-            public void Use<Tc>(string name = "") where Tc : Tp
-            {
-                ObjectBuilder.Register<Tp, Tc>(name);
-            }
+            ObjectBuilder.Register<Tp, Tc>(name);
         }
     }
-    
     internal class TypeMap
     {
         private string _name;
-        private string _mapName;
         private Type _type;
-        public TypeMap(Type type, string map = "")
+        public TypeMap(Type type)
         {
             _type = type;
             _name = _type.FullName;
-            _mapName = map;
         }
         public override bool Equals(object obj)
         {
@@ -63,10 +70,33 @@ namespace Resolver.Core
         }
         public override int GetHashCode()
         {
-            return _name.GetHashCode() ^ _mapName.GetHashCode();
+            return _name.GetHashCode();
         }
     }
-
+    internal class ConcreteTypeMap
+    {
+        private string _mapName;
+        private Type _type;
+        internal ConcreteTypeMap(Type type, string mapName)
+        {
+            _type = type;
+            _mapName = mapName;
+        }
+        public string MapName
+        {
+            get
+            {
+                return _mapName;
+            }
+        }
+        public Type Type
+        {
+            get
+            {
+                return _type;
+            }
+        }
+    }
     internal class Resolver
     {
         public static object GetConstructor(Type type)
@@ -76,7 +106,28 @@ namespace Resolver.Core
             if (info != null && info.Length > 0)
             {
                 var parameters = info[0].GetParameters();
+                if (parameters != null && parameters.Length > 0)
+                {
+                    foreach (var parameter in parameters)
+                    {
+                        Type t = parameter.ParameterType;
+                        var key = new TypeMap(t);
+                        if (ObjectBuilder.Contains(key))
+                        {
+                            var value = ObjectBuilder.GetValue(key);
+
+                        }
+                    }
+                }
+                else
+                {
+                }
             }
+
+        }
+        private 
+        private object[] InitializeParameters(ParameterInfo[] parameters)
+        {
 
         }
     }
