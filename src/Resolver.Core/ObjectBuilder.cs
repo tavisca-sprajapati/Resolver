@@ -7,34 +7,48 @@ using System.Threading.Tasks;
 
 namespace Resolver.Core
 {
-    public class ObjectBuilder
+    internal sealed class MapProvider
     {
-        private static Dictionary<TypeMap, ConcreteTypeMap> mapper = new Dictionary<TypeMap, ConcreteTypeMap>();
+        private static Dictionary<ConcreteTypeMap, Type[]> _concreteMapper;
+        internal static Dictionary<ConcreteTypeMap, Type[]> ConcreteMapper => _concreteMapper;
+    }
+    public sealed class ObjectBuilder
+    {
+        
+        private static Dictionary<TypeMap, List<ConcreteTypeMap>> mapper = new Dictionary<TypeMap, List<ConcreteTypeMap>>();
 
-        public static T Resolve<T>()
+        public static T Resolve<T>(string mapName = "")
         {
             var map = new TypeMap(typeof(T));
             if (mapper.ContainsKey(map))
             {
-                return (T)Activate(mapper[map].Type);
+                ConcreteTypeMap resolvedType = Helper.GetResolvedType(mapper[map], mapName);
+                object[] parameters = Helper.GetParameters(resolvedType);
+                return (T)Activate(resolvedType.Type, parameters);
             }
             return default(T);
         }
-        private static object Activate(Type type)
+
+        private static object Activate(Type type, object[] parameters)
         {
-            return FastActivator.CreateInstance(type);
+            return Activator.CreateInstance(type, parameters);
         }
         internal static void Register<Tp, Tc>(string name)
         {
             var map = new TypeMap(typeof(Tp));
             var concreteMap = new ConcreteTypeMap(typeof(Tc), name);
-            mapper[map] = concreteMap;
+            MapProvider.ConcreteMapper[concreteMap] = concreteMap.Parameters;
+            if (mapper.ContainsKey(map))
+            {
+                mapper[map].Add(concreteMap);
+            }
+            mapper[map] = new List<ConcreteTypeMap> { concreteMap };
         }
         internal static bool Contains(TypeMap map)
         {
             return mapper.ContainsKey(map);
         }
-        internal static ConcreteTypeMap GetValue(TypeMap map)
+        internal static List<ConcreteTypeMap> GetValue(TypeMap map)
         {
             return mapper[map];
         }
@@ -46,16 +60,15 @@ namespace Resolver.Core
         {
             return new RegisterExpression<T>();
         }
-        
     }
-    public class RegisterExpression<Tp>
+    public sealed class RegisterExpression<Tp>
     {
         public void Use<Tc>(string name = "") where Tc : Tp
         {
             ObjectBuilder.Register<Tp, Tc>(name);
         }
     }
-    internal class TypeMap
+    internal sealed class TypeMap
     {
         private string _name;
         private Type _type;
@@ -73,62 +86,81 @@ namespace Resolver.Core
             return _name.GetHashCode();
         }
     }
-    internal class ConcreteTypeMap
+    internal sealed class ConcreteTypeMap
     {
         private string _mapName;
         private Type _type;
+        private Type[] _ctorParameters;
         internal ConcreteTypeMap(Type type, string mapName)
         {
             _type = type;
             _mapName = mapName;
+            GetParams(type);
         }
-        public string MapName
+        internal Type[] Parameters => _ctorParameters;
+        private void GetParams(Type type)
         {
-            get
-            {
-                return _mapName;
-            }
+            var args = type.GetConstructors();
+            var ctor = args[0];
+            var parameters = ctor.GetParameters();
+            _ctorParameters = parameters.Select(parameter => parameter.ParameterType).ToArray();
         }
-        public Type Type
+        public override bool Equals(object obj)
         {
-            get
-            {
-                return _type;
-            }
+            if (obj == null || obj.GetType() != this.GetType())
+                return false;
+
+            return this.GetHashCode() == obj.GetHashCode();
         }
+        public override int GetHashCode()
+        {
+            return _type.FullName.GetHashCode();
+        }
+        public string MapName => _mapName;
+        public Type Type => _type;
     }
-    internal class Resolver
+    internal sealed class Helper
     {
-        public static object GetConstructor(Type type)
+        internal static ConcreteTypeMap GetResolvedType(List<ConcreteTypeMap> types, string mapName)
         {
-            ConstructorInfo[] info = type.GetConstructors();
+            if (string.IsNullOrEmpty(mapName))
+                return types[0];
+            return types.FirstOrDefault(t => string.Equals(t.MapName, mapName));
+        }
+        internal static object[] GetParameters(ConcreteTypeMap typeMap)
+        {
+            if (typeMap.Parameters == null || typeMap.Parameters.Length == 0)
+                return new object[0];
 
-            if (info != null && info.Length > 0)
+            object[] parameters = new object[typeMap.Parameters.Length];
+
+            for (int index = 0; index > parameters.Length; index++)
             {
-                var parameters = info[0].GetParameters();
-                if (parameters != null && parameters.Length > 0)
+                parameters[index] = InitializeParameter(typeMap.Parameters[index]);
+            }
+            return parameters;
+        }
+        private static object InitializeParameter(Type type)
+        {
+            var searchMap = new ConcreteTypeMap(type, string.Empty);
+            if (MapProvider.ConcreteMapper.ContainsKey(searchMap))
+            {
+                var map = MapProvider.ConcreteMapper[searchMap];
+                if (map != null)
                 {
-                    foreach (var parameter in parameters)
+                    if (map.Length == 0)
                     {
-                        Type t = parameter.ParameterType;
-                        var key = new TypeMap(t);
-                        if (ObjectBuilder.Contains(key))
-                        {
-                            var value = ObjectBuilder.GetValue(key);
-
-                        }
+                        return FastActivator.CreateInstance(type);
                     }
-                }
-                else
-                {
+                    var args = new object[map.Length];
+                    for (int index = 0; index > map.Length; index++)
+                    {
+                        args[index] = InitializeParameter(map[index]);
+                    }
+                    return Activator.CreateInstance(type, args);
                 }
             }
-
-        }
-        private 
-        private object[] InitializeParameters(ParameterInfo[] parameters)
-        {
-
+            return null;
         }
     }
 }
