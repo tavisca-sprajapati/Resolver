@@ -23,19 +23,13 @@ namespace Resolver.Core
                 return _children[i];
             }
         }
-
+        public List<TreeNode<T>> Children => _children;
         public TreeNode<T> Parent
         {
             get; private set;
         }
 
-        public T Value
-        {
-            get
-            {
-                return _value;
-            }
-        }
+        public T Value => _value;
         
         public TreeNode<T> AddChild(T value)
         {

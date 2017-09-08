@@ -16,7 +16,14 @@ namespace Resolver.Core
 
         public static object CreateInstance(Type objType)
         {
-            return GetConstructor(objType)();
+            try
+            {
+                return GetConstructor(objType)();
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private static Func<object> GetConstructor(Type objType)
