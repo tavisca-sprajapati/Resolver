@@ -10,7 +10,7 @@ namespace Resolver.Core
     {
         public static object CreateInstance(Type type, params object[] parameters)
         {
-            return Activator.CreateInstance(type, parameters); ;
+             return Activator.CreateInstance(type, parameters); ;
             //int paramCount = parameters.Count();
             //object obj = null;
             //switch (paramCount)
@@ -19,7 +19,8 @@ namespace Resolver.Core
             //        obj = FastActivator.CreateInstance(type);
             //        break;
             //    case 1:
-            //        obj = FastActivator<object>.CreateInstance(type, parameters[0]);
+            //        var t = parameters[0].GetType();
+            //        obj = FastActivator.CreateInstance(type, parameters[0]);
             //        break;
             //    case 2:
             //        obj = FastActivator<object, object>.CreateInstance(type, parameters[0], parameters[1]);

@@ -21,7 +21,7 @@ namespace Resolver.Test
         public void Initialize()
         {
             var register = new SearchServiceRegister();
-            var repository = ObjectBuilder.Resolve<INameRepository>();
+            var repository = ObjectBuilder.Resolve<INameRepository>("name");
             if (repository != null)
             {
                 repository.Add("test");

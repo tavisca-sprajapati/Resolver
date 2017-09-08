@@ -13,7 +13,8 @@ namespace Resolver.Test
     {
         public SearchServiceRegister()
         {
-            For<INameRepository>().Use<NameRepository>();
+            For<INameRepository>().Use<NameRepository>("name");
+            For<INameRepository>().Use<NullRepository>("null");
             For<ISearchService>().Use<SearchService>();
             For<ISearchServiceProvider>().Use<SearchServiceProvider>();
         }

@@ -23,5 +23,6 @@ namespace Resolver.Core
         {
             return _name.GetHashCode();
         }
+        public Type Type => _type;
     }
 }

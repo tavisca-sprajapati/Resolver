@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConcreteTypeMap.cs" />
+    <Compile Include="DependencyAttribute.cs" />
     <Compile Include="FastActivator.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="MapProvider.cs" />

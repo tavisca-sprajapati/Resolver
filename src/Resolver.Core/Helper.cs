@@ -11,7 +11,9 @@ namespace Resolver.Core
         internal static ConcreteTypeMap GetResolvedType(List<ConcreteTypeMap> types, string mapName)
         {
             if (string.IsNullOrEmpty(mapName))
+            {
                 return types[0];
+            }
             return types.FirstOrDefault(t => string.Equals(t.MapName, mapName));
         }
         internal static object[] GetParameters(ConcreteTypeMap typeMap)
@@ -27,13 +29,13 @@ namespace Resolver.Core
             }
             return parameters;
         }
-        private static object InitializeParameter(Type type)
+        private static object InitializeParameter(Parameter parameter)
         {
-            var map = new TypeMap(type);
+            var map = new TypeMap(parameter.Type);
 
-            if (ObjectBuilder.Contains(map))
+            if (MapProvider.Map.ContainsKey(map))
             {
-                ConcreteTypeMap resolvedType = GetResolvedType(ObjectBuilder.GetValue(map),"");
+                ConcreteTypeMap resolvedType = GetResolvedType(MapProvider.Map[map], parameter.Name);
                    if (resolvedType != null)
                     {
                     if (resolvedType.Parameters == null || resolvedType.Parameters.Length == 0)
@@ -50,5 +52,7 @@ namespace Resolver.Core
             }
             return null;
         }
+
+       
     }
 }
