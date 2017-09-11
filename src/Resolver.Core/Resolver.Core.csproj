@@ -45,7 +45,6 @@
     <Compile Include="FastActivator.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="MapProvider.cs" />
-    <Compile Include="Myclass.cs" />
     <Compile Include="ObjectActivator.cs" />
     <Compile Include="ObjectBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

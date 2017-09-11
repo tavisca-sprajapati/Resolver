@@ -9,7 +9,7 @@ namespace Resolver.Core
 {
     public sealed class ObjectBuilder
     {
-        public static T Resolve<T>(string mapName = "")
+        public static T Resolve<T>(string mapName)
         {
             Type type = typeof(T);
             var map = new TypeMap(type);
@@ -22,19 +22,9 @@ namespace Resolver.Core
             }
             return default(T);
         }
-        
-        internal static void Register<Tp, Tc>(string name)
+        public static T Resolve<T>()
         {
-            var map = new TypeMap(typeof(Tp));
-            var concreteMap = new ConcreteTypeMap(typeof(Tc), name);
-            if (MapProvider.Map.ContainsKey(map))
-            {
-                MapProvider.Map[map].Add(concreteMap);
-            }
-            else
-            {
-                MapProvider.Map[map] = new List<ConcreteTypeMap> { concreteMap };
-            }
+            return Resolve<T>("");
         }
     }
     

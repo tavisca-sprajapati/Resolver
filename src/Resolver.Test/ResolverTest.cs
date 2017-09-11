@@ -17,10 +17,28 @@ namespace Resolver.Test
 
             Assert.IsNotNull(result);
         }
+
+        [TestMethod]
+        public void TestCtorSelector()
+        {
+            ISearchService searchService = ObjectBuilder.Resolve<ISearchService>();
+
+            Assert.IsNotNull(searchService);
+
+            var result = searchService.Search("test");
+
+            Assert.IsNotNull(result);
+        }
+
         [TestInitialize]
         public void Initialize()
         {
             var register = new SearchServiceRegister();
+            PrepareData();
+            
+        }
+        private void PrepareData()
+        {
             var repository = ObjectBuilder.Resolve<INameRepository>("name");
             if (repository != null)
             {

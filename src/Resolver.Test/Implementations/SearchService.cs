@@ -11,14 +11,29 @@ namespace Resolver.Test.Implementations
     public class SearchService : ISearchService
     {
         INameRepository _nameRepository;
+
+        [DefaultCtor]
+        public SearchService()
+        {
+
+        }
+        public SearchService(string lessUsedParam)
+        {
+
+        }
+        [CtorSelector("withNameRepository")]
         public SearchService([Dependency("name")]INameRepository nameRepository)
         {
             _nameRepository = nameRepository;
         }
         public string Search(string name)
         {
-            string repoName = _nameRepository.Get(name);
-            return name + " " + repoName;
+            if (_nameRepository != null)
+            {
+                string repoName = _nameRepository.Get(name);
+                return name + " " + repoName;
+            }
+            return "No data";
         }
     }
 }

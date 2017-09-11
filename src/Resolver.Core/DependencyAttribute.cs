@@ -16,4 +16,20 @@ namespace Resolver.Core
         }
         public string Name => _name;
     }
+
+    [AttributeUsage(AttributeTargets.Constructor, AllowMultiple = false, Inherited = false)]
+    public class DefaultCtorAttribute : Attribute
+    {
+    }
+
+    [AttributeUsage(AttributeTargets.Constructor, AllowMultiple = false, Inherited = false)]
+    public class CtorSelectorAttribute : Attribute
+    {
+        private string _name;
+        public CtorSelectorAttribute(string name)
+        {
+            _name = name;
+        }
+        public string Name => _name;
+    }
 }
